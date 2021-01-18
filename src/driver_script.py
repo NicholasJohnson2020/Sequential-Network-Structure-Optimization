@@ -6,7 +6,7 @@ import pickle
 
 # Import custom scripts
 import network_construction_script as ncs
-import snvironment_script as es
+import environment_script as es
 import policy_script as ps
 
 global_start_time = time.time()
