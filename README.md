@@ -27,3 +27,7 @@ python data_processing_script.py
 
 Note that to execute this script, the user must separately download the raw data (the raw data was omitted as the file is quite large). The output of running
 this script is stored in src/data/processed_data.csv.
+
+### Running Experiments
+
+### Plot Generation
