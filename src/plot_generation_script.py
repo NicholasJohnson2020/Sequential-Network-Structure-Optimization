@@ -1,30 +1,25 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[5]:
-
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import sys
 import pickle
 
+# Verify the number of command line arguments
+assert len(sys.argv) == 5
 
-# In[6]:
-
+num_agents_path = sys.argv[1]
+T_path = sys.argv[2]
+m_path = sys.argv[3]
+output_path_root = sys.argv[4]
 
 data = {}
-with open('Experiment_Results/num_agents_10trials_3.pickle', 'rb') as handle:
+with open(num_agents_path, 'rb') as handle:
     data['num_agents'] = pickle.load(handle)
-with open('Experiment_Results/T_10trials_3.pickle', 'rb') as handle:
+with open(T_path, 'rb') as handle:
     data['T'] = pickle.load(handle)
-with open('Experiment_Results/m_10trials_3.pickle', 'rb') as handle:
+with open(m_path, 'rb') as handle:
     data['m'] = pickle.load(handle)
-
-
-# In[74]:
-
 
 plt.rcParams["font.family"] = "Times New Roman"
 policies = ['Control',
@@ -42,12 +37,8 @@ marker_dict = {'Control': 'o',
                'Modifed Reconnect': 'X'}
 
 normalized_plots = [['Cumulative','num_agents','Objective'],
-                    #['Cumulative','num_agents','Time'],
                     ['Cumulative','T','Objective'],
-                    #['Cumulative','T','Time'],
-                    ['Terminal','num_agents','Objective'],
-                    #['Terminal','num_agents','Time'],
-                    #['Terminal','T','Time']
+                    ['Terminal','num_agents','Objective']
                    ]
 
 x_labels = {'num_agents': 'Number of Nodes |V|',
@@ -56,14 +47,10 @@ x_labels = {'num_agents': 'Number of Nodes |V|',
 y_labels = {'num_agents': '\ndivided by |V|',
             'T': '\ndivided by T'}
 
-
-# In[83]:
-
-
 def generate_subplot(ax, value, param, data, obj_mode,
                      exog_mode, policies, include_title):
 
-    normalized = [obj_mode,param,value] in normalized_plots
+    normalized = [obj_mode, param, value] in normalized_plots
     mean_label = 'Mean ' + value
     variables = data[param]['Parameters'][param]
     hyper_params = data[param]['Parameters'].copy()
@@ -75,7 +62,8 @@ def generate_subplot(ax, value, param, data, obj_mode,
         mean_data = np.zeros(len(variables))
         if normalized:
             for i in range(len(variables)):
-                mean_data[i] = policy_data[variables[i]][mean_label]/variables[i]
+                mean_data[i] = policy_data[variables[i]][
+                                            mean_label] / variables[i]
         else:
             for i in range(len(variables)):
                 mean_data[i] = policy_data[variables[i]][mean_label]
@@ -84,9 +72,9 @@ def generate_subplot(ax, value, param, data, obj_mode,
             label = 'Gradient Based'
         else:
             label = policy
-        ax.plot(variables, mean_data, linewidth=2.5, label=label, marker=marker_dict[policy], markersize=16)
+        ax.plot(variables, mean_data, linewidth=2.5,
+                label=label, marker=marker_dict[policy], markersize=16)
 
-    #ax.legend()
     ax.set_xlabel(x_labels[param], fontsize=24)
 
     if value == 'Objective':
@@ -105,55 +93,6 @@ def generate_subplot(ax, value, param, data, obj_mode,
         ax.set_title(title, fontsize=24, pad=40)
 
     ax.grid()
-
-
-# In[84]:
-
-
-def generate_plots(params, data, obj_mode,
-                   exog_mode, policies, figsize,
-                   filename=None):
-
-    n = len(params)
-    fig, ax = plt.subplots(n, 2, figsize=figsize)
-
-    for i in range(n):
-        if i == 0:
-            title = True
-        else:
-            title = False
-        generate_subplot(ax=ax[i,0],value='Objective', param=params[i],
-                         data=data, obj_mode=obj_mode, exog_mode=exog_mode,
-                         policies=policies, include_title = title)
-        generate_subplot(ax=ax[i,1],value='Time', param=params[i],
-                         data=data, obj_mode=obj_mode, exog_mode=exog_mode,
-                         policies=policies, include_title = title)
-
-    handles, labels = ax[n-1,0].get_legend_handles_labels()
-
-    fig.subplots_adjust(bottom=0.15, wspace = 0.3, hspace=0.25)
-    leg = fig.legend(handles, labels, loc='lower center',
-                     fancybox=True, shadow=True, ncol=2, fontsize=24)
-    for legobj in leg.legendHandles:
-        legobj.set_linewidth(5)
-
-    if filename != None:
-        plt.savefig(filename, dpi = 300)
-    plt.show()
-
-
-# In[85]:
-
-
-params = ['num_agents', 'T', 'm']
-generate_plots(params=params, data=data, obj_mode='Cumulative',
-               exog_mode='Weighted', policies=policies,
-               figsize=(16,23),
-               filename='Experiment_Results/test_Cumulative_Weighted_6Policies')
-
-
-# In[86]:
-
 
 def generate_plots_ijcai(params, data, obj_mode,
                          exog_mode, policies, figsize,
@@ -179,17 +118,18 @@ def generate_plots_ijcai(params, data, obj_mode,
 
     if filename != None:
         plt.savefig(filename, dpi = 300)
-    plt.show()
-
-
-# In[94]:
-
 
 params = ['num_agents', 'T', 'm']
-generate_plots_ijcai(params=params, data=data, obj_mode='Terminal',
-                     exog_mode='Weighted', policies=policies,
-                     figsize=(23, 8), mode='Time',
-                     filename='Experiment_Results/Terminal_Weighted_Time_ijcai')
+obj_modes = ['Cumulative', 'Terminal']
+exog_modes = ['Uniform', 'Weighted']
+plot_modes = ['Objective', 'Time']
 
-
-# In[ ]:
+for obj_mode in obj_modes:
+    for exog_mode in exog_modes:
+        for plot_mode in plot_modes:
+            output_path = output_path_root + obj_mode + '_' + exog_mode + \
+                            '_' + plot_mode + '_plots'
+            generate_plots_ijcai(params=params, data=data, obj_mode=obj_mode,
+                                 exog_mode=exog_mode, policies=policies,
+                                 figsize=(23, 8), mode=plot_mode,
+                                 filename=output_path)
